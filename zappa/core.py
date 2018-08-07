@@ -222,6 +222,7 @@ class Zappa(object):
     extra_permissions = None
     assume_policy = ASSUME_POLICY
     attach_policy = ATTACH_POLICY
+    apigateway_policy = None
     cloudwatch_log_levels = ['OFF', 'ERROR', 'INFO']
     xray_tracing = False
 
@@ -1288,6 +1289,8 @@ class Zappa(object):
             endpoint = troposphere.apigateway.EndpointConfiguration()
             endpoint.Types = ["REGIONAL"]
             restapi.EndpointConfiguration = endpoint
+        if self.apigateway_policy:
+            restapi.Policy = json.loads(self.apigateway_policy)
         self.cf_template.add_resource(restapi)
 
         root_id = troposphere.GetAtt(restapi, 'RootResourceId')
@@ -2161,7 +2164,7 @@ class Zappa(object):
                                                               "path" : "/certificateArn",
                                                               "value" : certificate_arn}
                                                          ])
-    
+
     def update_domain_base_path_mapping(self, domain_name, lambda_name, stage, base_path):
         """
         Update domain base path mapping on API Gateway if it was changed
@@ -2179,8 +2182,8 @@ class Zappa(object):
                     self.apigateway_client.update_base_path_mapping(domainName=domain_name,
                                                                     basePath=base_path_mapping['basePath'],
                                                                     patchOperations=[
-                                                                        {"op" : "replace", 
-                                                                         "path" : "/basePath", 
+                                                                        {"op" : "replace",
+                                                                         "path" : "/basePath",
                                                                          "value" : base_path}
                                                                     ])
         if not found:
@@ -2190,7 +2193,7 @@ class Zappa(object):
                 restApiId=api_id,
                 stage=stage
             )
-        
+
 
     def get_domain_name(self, domain_name, route53=True):
         """
